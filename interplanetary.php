@@ -8,6 +8,7 @@
 	include 'functions/startrade_functions.php';
 	include 'functions/mysql_functions.php';
 	include 'functions/shipyard_functions.php';
+	include 'functions/marketplace_functions.php';
 	
 	// Get players current planet
 	$current_planet_details = currentPlanetDetails($_GET['player_id']);
