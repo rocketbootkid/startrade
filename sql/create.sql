@@ -60,3 +60,14 @@ CREATE TABLE `systems` (
   `galaxy_name` varchar(45) default NULL,
   PRIMARY KEY  (`system_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+CREATE TABLE `transactions` (
+  `transaction_id` int(11) NOT NULL auto_increment,
+  `player_id` int(11) default NULL,
+  `planet_id` int(11) default NULL,
+  `commodity_id` int(11) default NULL,
+  `commodity_units` int(11) default NULL,
+  `transaction_type` int(11) default NULL,
+  `commodity_unit_price` int(11) default NULL,
+  PRIMARY KEY  (`transaction_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;

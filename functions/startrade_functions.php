@@ -295,7 +295,12 @@
 				// Identify price of commodity at this planet
 				$price_here = getMarketplaceDetail($_GET['planet_id'], $commodity_id, "commodity_unit_cost");
 				$price_delta = $price_here - $result[$c][3];
-				echo "\n\t\t\t<td align=center>" . $price_here . " (" . $price_delta . ")"; // Price Here
+				if ($price_delta > 0) {
+					$color = "#81F781";
+				} else {
+					$color = "FE642E";
+				}
+				echo "\n\t\t\t<td align=center bgcolor=" . $color . ">" . $price_here . " (" . $price_delta . ")"; // Price Here
 				
 				$best_price = getBestPrice($commodity_id); // [0] is Price, [1] is Planet Name
 				// Hide part of the planet name where best price is, either system or planet
@@ -317,10 +322,6 @@
 			$remaining_cargo_space = $cargo;
 			echo "\n\t\t<tr>\n\t\t\t<td colspan=7>No cargo\n\t\t</tr>";
 		}
-
-		// Display Ship Name
-		//$ship_name = getCurrentShipName($player_id);
-		//echo "\n\t\t<tr bgcolor=#82caff>\n\t\t\t<td colspan=6>" . $ship_name . "\n\t\t</tr>";
 		
 		// Player Fuel
 
@@ -543,7 +544,17 @@
 		} else {
 			addToDebugLog("purchase(): Player funds not updated");
 		}
-	
+		
+		// Writes transaction to the database
+		$dml = "INSERT INTO startrade.transactions (player_id, planet_id, commodity_id, commodity_units, transaction_type, commodity_unit_price) VALUES (" . $current_player . ", " . $planet_id . ", " . $commodity_id . ", " . $units . ", 1, " . $unit_cost . ");";
+		$result = insert($dml);
+		if ($result == TRUE) {
+			addToDebugLog("purchase(): Transaction recorded");
+		} else {
+			addToDebugLog("purchase(): Transaction not recorded");
+		}
+
+		
 	}
 	
 	function sell($planet_id, $player_id, $units, $commodity_id) {
@@ -587,6 +598,15 @@
 			addToDebugLog("sell(): Player credits updated");
 		} else {
 			addToDebugLog("sell(): Player credits not updated");
+		}
+		
+		// Writes transaction to the database
+		$dml = "INSERT INTO startrade.transactions (player_id, planet_id, commodity_id, commodity_units, transaction_type, commodity_unit_price) VALUES (" . $player_id . ", " . $planet_id . ", " . $commodity_id . ", " . $units . ", 0, " . $value . ");";
+		$result = insert($dml);
+		if ($result == TRUE) {
+			addToDebugLog("purchase(): Transaction recorded");
+		} else {
+			addToDebugLog("purchase(): Transaction not recorded");
 		}
 	
 	}
