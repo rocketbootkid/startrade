@@ -239,7 +239,7 @@
 	
 		addToDebugLog("cargo(): Function Entry - supplied parameters: Player ID: " . $player_id);	
 	
-		echo "\n\t<table border=1 cellspacing=0 cellpadding=3>";
+		echo "\n\t<table border=1 cellspacing=0 cellpadding=3 width=100%>";
 		echo "\n\t\t<tr bgcolor=#82caff>";
 		echo "\n\t\t\t<td>Commodities to Sell";
 		echo "\n\t\t\t<td align=center>Units";

@@ -149,18 +149,25 @@
 		}
 	}
 
-	function ListPlanets($mode, $planet_name, $player_id) {
+	function ListPlanets($mode, $planet_name, $player_id, $galaxy_id) {
 	
-		addToDebugLog("ListPlanets(): Function Entry - supplied parameters: Mode: " . $mode . ", Planet name: " . $planet_name);
+		addToDebugLog("ListPlanets(): Function Entry - supplied parameters: Mode: " . $mode . ", Planet name: " . $planet_name . ", Player ID: " . $player_id . ", Galaxy ID: " . $galaxy_id);
 	
-		$sql = "SELECT system_id FROM startrade.systems;";
+		$sql = "SELECT system_id FROM startrade.systems WHERE galaxy_id = " . $galaxy_id . ";";
 		$systems = search($sql);
 		$system_count = count($systems);
 			
-		$sql = "SELECT planet_name, system_id, planet_id, planet_type FROM startrade.planets ORDER BY planet_name;";
+		$sql = "SELECT planet_name, planets.system_id, planet_id, planet_type FROM startrade.planets, startrade.systems WHERE planets.system_id = systems.system_id AND systems.galaxy_id = " . $galaxy_id . " ORDER BY planet_name;";
 		$planets = search($sql);
 		$planet_count = count($planets);
 		addToDebugLog("ListPlanets(): - " . $planet_count . " planets found in " . $system_count . " systems");
+		
+		// Display Galaxy Name
+		if ($mode == "galaxylist") {
+			$galaxy_details = galaxyDetailsByGalaxy($galaxy_id);
+			echo "<h2>The " . $galaxy_details[0][1] . " galaxy</h2>";			
+			
+		}
 		
 		$current_planet = 0;
 		echo "<p>\n\n<table>\n\t<tr><td valign=top>";
@@ -249,6 +256,20 @@
 	
 		$sql = "SELECT galaxy_id, galaxy_name FROM startrade.systems WHERE system_id = " . $system_id . ";";
 		addToDebugLog("GalaxyDetails(): Constructed SQL: " . $sql);
+		$galaxy_details = search($sql);
+	
+		return $galaxy_details;
+	
+	}
+
+	function galaxyDetailsByGalaxy($galaxy_id) {
+	
+		// This function returns details of the galaxy
+	
+		addToDebugLog("galaxyDetailsByGalaxy(): Function Entry - supplied parameters: Galaxy ID: " . $galaxy_id);
+	
+		$sql = "SELECT galaxy_id, galaxy_name FROM startrade.systems WHERE galaxy_id = " . $galaxy_id . " LIMIT 1;";
+		addToDebugLog("galaxyDetailsByGalaxy(): Constructed SQL: " . $sql);
 		$galaxy_details = search($sql);
 	
 		return $galaxy_details;

@@ -143,9 +143,20 @@
 
 	function displayTransactions($player_id) {
 		
-		// Displays player transactions
+		// Will determine what Transaction display mode to use
 		
 		addToDebugLog("displayTransactions(): Function Entry - supplied parameters: Player ID: " . $player_id);
+		
+		//displayTransactionsBasic($player_id);
+		displayTransactionsAdvanced($player_id);
+	}
+	
+	
+	function displayTransactionsBasic($player_id) {
+		
+		// Displays player transactions
+		
+		addToDebugLog("displayTransactionsBasic(): Function Entry - supplied parameters: Player ID: " . $player_id);
 
 		// Get transaction details
 		$sql = "SELECT * FROM startrade.transactions WHERE player_id = " . $player_id . " ORDER BY transaction_id DESC LIMIT 10;";
@@ -187,7 +198,8 @@
 				echo " for " . $price . "Cr on ";
 				
 				// Planet
-				echo $planet_name = getPlanetDetails($result[$c][2], "planet_name");
+				$planet_name = getPlanetDetails($result[$c][2], "planet_name");
+				echo "<a href='interplanetary.php?planet_id=" . $result[$c][2] . "&player_id=" . $player_id . "'>" . $planet_name . "</a>";
 				
 				echo "</tr>";
 			}
@@ -197,4 +209,85 @@
 		echo "</table>";
 	}
 
+	function displayTransactionsAdvanced($player_id) {
+		
+		// Displays player transactions (advanced mode)
+		
+		addToDebugLog("displayTransactionsAdvanced(): Function Entry - supplied parameters: Player ID: " . $player_id);
+		
+		$count = 5;
+
+		// Get most recent transaction details
+		$sql = "SELECT * FROM startrade.transactions WHERE player_id = " . $player_id . " AND transaction_type = 0 ORDER BY transaction_id DESC LIMIT " . $count . ";";
+		addToDebugLog("sell(): Constructed query: " . $sql);	
+		$result = search($sql);
+		$rows = count($result);
+		
+		// 0	transaction id
+		// 1	player_id
+		// 2	planet_id
+		// 3	commodity_id
+		// 4	commodity_units
+		// 5	transaction_type
+		// 6	commodity_unit_price
+		
+		echo "<p><table width=100% border=1 cellpadding=3 cellspacing=0>";
+		echo "<tr><td bgcolor=#82caff>" . $count . " most recent completed trades</tr>";
+
+		if ($rows > 0) {
+			for ($c = 0; $c < $rows; $c++) {
+				
+				// For each sell transaction, find the most recent buy transaction
+				$sql2 = "SELECT * FROM startrade.transactions WHERE player_id = " . $player_id . " AND transaction_type = 1 AND commodity_id = " . $result[$c][3] . " AND transaction_id < " . $result[$c][0] . " ORDER BY transaction_id DESC LIMIT 1;";
+				addToDebugLog("sell(): Constructed query: " . $sql2);	
+				$result2 = search($sql2);
+				
+				// Write Bought Line
+				echo "<tr><td>+ Bought ";
+				
+				// Units
+				echo $result2[0][4] . " units of ";
+				
+				// Commodity
+				$commodity_name = getCommodityDetail($result2[0][3], "commodity_name");
+				echo "<b>" . $commodity_name . "</b>";
+				
+				// Unit Price
+				echo " at " . $result2[0][6] . "Cr each ";
+				
+				// Price Bought For
+				$buy_price = $result2[0][6] * $result2[0][4];
+				echo " for " . $buy_price . "Cr on ";
+				
+				// Planet
+				$planet_name = getPlanetDetails($result2[0][2], "planet_name");
+				echo "<a href='interplanetary.php?planet_id=" . $result2[0][2] . "&player_id=" . $player_id . "'>" . $planet_name . "</a>";
+				
+				// Write Sold Line
+				echo "<br/>- Sold all ";
+
+				// Unit Price
+				echo " at " . $result[$c][6] . "Cr each";
+				
+				// Price Sold For
+				$sell_price = $result[$c][6] * $result[$c][4];
+				echo " for " . $sell_price . "Cr on ";
+				
+				// Planet
+				$planet_name = getPlanetDetails($result[$c][2], "planet_name");
+				echo "<a href='interplanetary.php?planet_id=" . $result[$c][2] . "&player_id=" . $player_id . "'>" . $planet_name . "</a>";			
+				
+				// Write Profit Line
+				$profit = $sell_price - $buy_price;
+				$percent = round(($profit / $buy_price)*100, 0);
+				echo "<br/>= Made " . $profit . "Cr profit (a " . $percent . "% return)</tr>";
+				$profit = 0;
+				$percent = 0;
+
+			}
+		}
+		
+		echo "</table>";
+	}
+		
 ?>
