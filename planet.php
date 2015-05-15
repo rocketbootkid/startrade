@@ -13,6 +13,7 @@
 	include 'functions/startrade_functions.php';
 	include 'functions/galaxy_functions.php';
 	include 'functions/marketplace_functions.php';
+	include 'functions/transaction_functions.php';
 	
 	global $current_player;
 	$current_player = $_GET['player_id'];
@@ -46,6 +47,7 @@
 
 	echo "<td valign=top>";
 		cargo($_GET['player_id']);
+		displayTransactions($_GET['player_id']);
 	echo "</table>";
 
 	//outputDebugLog();

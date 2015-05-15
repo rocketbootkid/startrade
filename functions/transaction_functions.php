@@ -148,10 +148,53 @@
 		addToDebugLog("displayTransactions(): Function Entry - supplied parameters: Player ID: " . $player_id);
 
 		// Get transaction details
-		$sql = "SELECT * FROM startrade.  WHERE planet_id = " . $planet_id . " AND commodity_id = " . $commodity_id . ";";
+		$sql = "SELECT * FROM startrade.transactions WHERE player_id = " . $player_id . " ORDER BY transaction_id DESC LIMIT 10;";
 		addToDebugLog("sell(): Constructed query: " . $sql);	
 		$result = search($sql);
-
+		$rows = count($result);
+		
+		// 0	transaction id
+		// 1	player_id
+		// 2	planet_id
+		// 3	commodity_id
+		// 4	commodity_units
+		// 5	transaction_type
+		// 6	commodity_unit_price
+		
+		echo "<p><table width=100% border=1 cellpadding=3 cellspacing=0>";
+		
+		if ($rows > 0) {
+			for ($c = 0; $c < $rows; $c++) {
+				echo "<tr><td>";
+				
+				echo $result[$c][0];
+				
+				// Bought / Sold
+				if ($result[$c][5] == 0) { // Sell
+					echo ": Sold ";
+				} else {
+					echo ": Bought ";
+				}
+				
+				// Units
+				echo $result[$c][4] . " units of ";
+				
+				// Commodity
+				echo $commodity_name = getCommodityDetail($result[$c][3], "commodity_name");
+				
+				// Price Sold For
+				$price = $result[$c][6] * $result[$c][4];
+				echo " for " . $price . "Cr on ";
+				
+				// Planet
+				echo $planet_name = getPlanetDetails($result[$c][2], "planet_name");
+				
+				echo "</tr>";
+			}
+		} else {
+			echo "<tr><td>There are no transactions to display</tr>";
+		}
+		echo "</table>";
 	}
 
 ?>

@@ -484,5 +484,23 @@
 		return $result;
 	
 	}
+	
+	function getPlanetDetails($planet_id, $attribute) {
+		
+		// Returns details of the specified planet
+		
+		addToDebugLog("getPlanetDetails(): Function Entry - supplied parameters: Planet ID: " . $planet_id . ", Attribute: " . $attribute);	
+		
+		$sql = "SELECT " . $attribute . " FROM startrade.planets WHERE planet_id = '" . $planet_id . "';";
+		addToDebugLog("getPlanetDetails(): Constructed query: " . $sql);
+		
+		$result = search($sql);
+		$planet_detail = $result[0][0];
+		
+		addToDebugLog("getCommodityDetail(): Planet " . $planet_id . "'s " . $attribute . ": " . $planet_detail);
+		
+		return $planet_detail;
+		
+	}
 
 ?>
