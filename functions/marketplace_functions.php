@@ -136,6 +136,10 @@
 				addToDebugLog("generateNewMarketplace(): ERROR: Commodity ID " . $result[$c][2] . " has a price of zero");
 				$amount = round(rand($commodity_min, $commodity_max), 0);
 				addToDebugLog("generateNewMarketplace(): Setting commodity ID " . $result[$c][2] . "'s price to " . $amount);
+			} elseif ($result[$c][3] > $commodity_max){
+				addToDebugLog("generateNewMarketplace(): ERROR: Commodity ID " . $result[$c][2] . " has a price higher than the max amount");
+				$amount = round(rand($commodity_min, $commodity_max), 0);
+				addToDebugLog("generateNewMarketplace(): Setting commodity ID " . $result[$c][2] . "'s price to " . $amount);
 			} else {
 				$amount = $result[$c][3]; // Amount is current marketplace price
 			}			
@@ -155,10 +159,10 @@
 			// Alter price based on the number of available units
 			$commodity_units = $result[$c][4];
 			if ($commodity_units <= 10) {
-				$amount = $amount * 1.2;
+				$amount = round($amount * 1.2, 0);
 				addToDebugLog("generateNewMarketplace(): Not many units available, increasing price");
 			} elseif (commodity_units >= 75) {
-				$amount = $amount * 0.8;
+				$amount = round($amount * 0.8, 0);
 				addToDebugLog("generateNewMarketplace(): Lots of units available, de`creasing price");
 			}
 			

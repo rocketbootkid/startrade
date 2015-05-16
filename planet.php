@@ -47,7 +47,7 @@
 
 	echo "<td valign=top>";
 		cargo($_GET['player_id']);
-		displayTransactions($_GET['player_id']);
+		displayTransactions($_GET['player_id'], 5);
 	echo "</tr></table>";
 
 	//outputDebugLog();

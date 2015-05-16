@@ -141,25 +141,25 @@
 	
 	}
 
-	function displayTransactions($player_id) {
+	function displayTransactions($player_id, $count) {
 		
 		// Will determine what Transaction display mode to use
 		
-		addToDebugLog("displayTransactions(): Function Entry - supplied parameters: Player ID: " . $player_id);
+		addToDebugLog("displayTransactions(): Function Entry - supplied parameters: Player ID: " . $player_id . ", Count: " . $count);
 		
-		//displayTransactionsBasic($player_id);
-		displayTransactionsAdvanced($player_id);
+		//displayTransactionsBasic($player_id, $count);
+		displayTransactionsAdvanced($player_id, $count);
 	}
 	
 	
-	function displayTransactionsBasic($player_id) {
+	function displayTransactionsBasic($player_id, $count) {
 		
 		// Displays player transactions
 		
-		addToDebugLog("displayTransactionsBasic(): Function Entry - supplied parameters: Player ID: " . $player_id);
+		addToDebugLog("displayTransactionsBasic(): Function Entry - supplied parameters: Player ID: " . $player_id . ", Count: " . $count);
 
 		// Get transaction details
-		$sql = "SELECT * FROM startrade.transactions WHERE player_id = " . $player_id . " ORDER BY transaction_id DESC LIMIT 10;";
+		$sql = "SELECT * FROM startrade.transactions WHERE player_id = " . $player_id . " ORDER BY transaction_id DESC LIMIT " . $count . ";";
 		addToDebugLog("sell(): Constructed query: " . $sql);	
 		$result = search($sql);
 		$rows = count($result);
@@ -209,16 +209,23 @@
 		echo "</table>";
 	}
 
-	function displayTransactionsAdvanced($player_id) {
+	function displayTransactionsAdvanced($player_id, $count) {
 		
 		// Displays player transactions (advanced mode)
 		
-		addToDebugLog("displayTransactionsAdvanced(): Function Entry - supplied parameters: Player ID: " . $player_id);
-		
-		$count = 5;
+		addToDebugLog("displayTransactionsAdvanced(): Function Entry - supplied parameters: Player ID: " . $player_id . ", Count: " . $count);
 
+		if ($player_id == "") {
+			$player_select = "";
+		} else {
+			$player_select = "player_id = " . $player_id . " AND";
+		}
+
+		global $current_player;
+		$current_player = $_GET['player_id'];
+		
 		// Get most recent transaction details
-		$sql = "SELECT * FROM startrade.transactions WHERE player_id = " . $player_id . " AND transaction_type = 0 ORDER BY transaction_id DESC LIMIT " . $count . ";";
+		$sql = "SELECT * FROM startrade.transactions WHERE " . $player_select . " transaction_type = 0 ORDER BY transaction_id DESC LIMIT " . $count . ";";
 		addToDebugLog("sell(): Constructed query: " . $sql);	
 		$result = search($sql);
 		$rows = count($result);
@@ -238,12 +245,18 @@
 			for ($c = 0; $c < $rows; $c++) {
 				
 				// For each sell transaction, find the most recent buy transaction
-				$sql2 = "SELECT * FROM startrade.transactions WHERE player_id = " . $player_id . " AND transaction_type = 1 AND commodity_id = " . $result[$c][3] . " AND transaction_id < " . $result[$c][0] . " ORDER BY transaction_id DESC LIMIT 1;";
+				$sql2 = "SELECT * FROM startrade.transactions WHERE " . $player_select . " transaction_type = 1 AND commodity_id = " . $result[$c][3] . " AND transaction_id < " . $result[$c][0] . " ORDER BY transaction_id DESC LIMIT 1;";
 				addToDebugLog("sell(): Constructed query: " . $sql2);	
 				$result2 = search($sql2);
 				
 				// Write Bought Line
-				echo "<tr><td>+ Bought ";
+				echo "<tr><td>+";
+				
+				if ($player_id == "") {
+					echo " Player " . $result[$c][1];
+				}
+				
+				echo " bought ";
 				
 				// Units
 				echo $result2[0][4] . " units of ";
@@ -261,7 +274,7 @@
 				
 				// Planet
 				$planet_name = getPlanetDetails($result2[0][2], "planet_name");
-				echo "<a href='interplanetary.php?planet_id=" . $result2[0][2] . "&player_id=" . $player_id . "'>" . $planet_name . "</a>";
+				echo "<a href='interplanetary.php?planet_id=" . $result2[0][2] . "&player_id=" . $current_player . "'>" . $planet_name . "</a>";
 				
 				// Write Sold Line
 				echo "<br/>- Sold all ";
@@ -275,7 +288,7 @@
 				
 				// Planet
 				$planet_name = getPlanetDetails($result[$c][2], "planet_name");
-				echo "<a href='interplanetary.php?planet_id=" . $result[$c][2] . "&player_id=" . $player_id . "'>" . $planet_name . "</a>";			
+				echo "<a href='interplanetary.php?planet_id=" . $result[$c][2] . "&player_id=" . $current_player . "'>" . $planet_name . "</a>";			
 				
 				// Write Profit Line
 				$profit = $sell_price - $buy_price;
