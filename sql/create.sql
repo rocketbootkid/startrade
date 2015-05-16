@@ -71,3 +71,11 @@ CREATE TABLE `transactions` (
   `commodity_unit_price` int(11) default NULL,
   PRIMARY KEY  (`transaction_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+CREATE TABLE `upgrades` (
+  `upgrade_id` int(11) NOT NULL auto_increment,
+  `player_id` int(11) default NULL,
+  `upgrade_name` varchar(45) default NULL,
+  `upgrade_level` int(11) default NULL,
+  PRIMARY KEY  (`upgrade_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;

@@ -14,7 +14,3 @@ Multiverse
 ----------
 1. Generate other galaxies that players can travel to.
 2. Ability unlocked by buying upgrade
-3. Add to the depart page, which will now show other galaxies as well as the planets in the current galaxy.
-  a. Clicking on another galaxy will then;
-    i. redisplay the page displaying the planets in the new galaxy
-    ii. links to the other galaxies.

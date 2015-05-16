@@ -1,3 +1,5 @@
+<?php 	setcookie("Startrade:CurrentUser", $_GET['player_id']); ?>
+
 <html>
 
 <head>
