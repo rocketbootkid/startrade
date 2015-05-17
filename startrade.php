@@ -6,7 +6,7 @@
 
 <body>
 
-	<a href="addGalaxy.php" target="_new">Generate New Galaxy</a><br/>
+	<a href="addGalaxy.php?player_id=1" target="_new">Generate New Galaxy</a><br/>
 	<a href="deleteGalaxy.php" target="_new">Delete Galaxy</a>
 	<hr>
 	<?php

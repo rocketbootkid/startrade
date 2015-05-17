@@ -28,6 +28,8 @@
 		for ($s = 0; $s < $systems; $s++) {
 			generateSystems($new_galaxy_id, $galaxy_name);
 		}
+		
+		return $new_galaxy_id;
 	
 	}
 	
@@ -166,7 +168,6 @@
 		if ($mode == "galaxylist") {
 			$galaxy_details = galaxyDetailsByGalaxy($galaxy_id);
 			echo "<h2>The " . $galaxy_details[0][1] . " galaxy</h2>";			
-			
 		}
 		
 		$current_planet = 0;

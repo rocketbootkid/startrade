@@ -194,6 +194,7 @@
 		// 6	commodity_unit_price
 		
 		echo "<p><table width=100% border=1 cellpadding=3 cellspacing=0>";
+		echo "<tr><td bgcolor=#82caff>" . $count . " most recent completed trades</tr>";
 		
 		if ($rows > 0) {
 			for ($c = 0; $c < $rows; $c++) {

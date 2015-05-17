@@ -13,15 +13,15 @@
 	include 'functions/startrade_functions.php';
 	include 'functions/galaxy_functions.php';
 	
-	generateGalaxy();
+	$new_galaxy_id = generateGalaxy();
 	
-	ListPlanets("", "", "");
+	ListPlanets("galaxylist", "", $_GET['player_id'], $new_galaxy_id);
 	
-	outputDebugLog();
+	//outputDebugLog();
 
 ?>
 
-<p><a href="startrade.html">Back</a>
+<p><a href="startrade.php">Back</a>
 
 </body>
 

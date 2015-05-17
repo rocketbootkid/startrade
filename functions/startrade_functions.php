@@ -466,12 +466,14 @@
 		$count = count($result);
 		addToDebugLog("haveWeVisitedThisPlanet(): Found Commodity rows: " . $count);
 		
-		if ($count == 0) {
+		if ($count <= 1) {
 			$havewevisited = FALSE;
+			$havewe = "Nope";
 		} else {
 			$havewevisited = TRUE;
+			$havewe = "Yup";
 		}
-		addToDebugLog("haveWeVisitedThisPlanet(): Have we visited this planet before: " . $havewevisited);
+		addToDebugLog("haveWeVisitedThisPlanet(): Have we visited this planet before: " . $havewe);
 	
 		return $havewevisited;
 	

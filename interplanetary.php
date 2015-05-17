@@ -31,12 +31,15 @@
 	// [2]	System ID
 	// [3]	Planet Type
 	$new_planet_name = $new_planet_details[1];
-
-	//echo "<head><title>" . $current_planet_name . " >>> " . $new_planet_name . "</title></head><body>";
-	//echo "Leaving " . $current_planet_name . ", travelling to " . $new_planet_name;
 	
 	if ($current_planet_name != $new_planet_name) {
 	
+		// Determine if we've been here before
+		$havewevisited = haveWeVisitedThisPlanet($_GET['planet_id']);
+		if ($havewevisited == FALSE) { // If we haven't, generate its marketplace
+			generateNewMarketplace($_GET['planet_id']);
+		}
+		
 		// Update players current fuel
 		updateCurrentFuel($_GET['player_id'], $_GET['planet_id'], $current_planet_id);
 
@@ -45,17 +48,13 @@
 		
 		// Update fuel across all marketplaces
 		updateMarketplaceFuel();
-	
+			
 	}
-		
-	//echo "<p><a href='planet.php?planet_id=" . $_GET['planet_id'] . "&player_id=" . $_GET['player_id']. "'>Land on " . $new_planet_name . "</a>";
 		
 	//outputDebugLog();
 	
 	echo "<script>window.location.href = 'planet.php?planet_id=" . $_GET['planet_id'] . "&player_id=" . $_GET['player_id']. "';</script>";
 
 ?>
-
-</body>
 
 </html>

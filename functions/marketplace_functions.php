@@ -32,7 +32,10 @@
 		
 		addToDebugLog("generateNewMarketplace(): Function Entry - supplied parameters: Planet: " . $planet_id);
 		
-		global $current_player;		
+		global $current_player;
+		if ($current_player == 0) {
+			$current_player = $_GET['player_id'];
+		}
 		
 		$sql = "SELECT * FROM startrade.commodity;";
 		$result = search($sql);
@@ -55,7 +58,6 @@
 				$available_units = 100;
 				addToDebugLog("generateNewMarketplace(): Ensured 100 units of fuel available");
 			}
-			
 			
 			// Generate Price
 			$amount = round(rand(intval($result[$c][2]), $result[$c][3]), 0);
@@ -256,8 +258,9 @@
 			
 			$modifier = rand(95, 105)/100;
 			addToDebugLog("updateMarketplaces(): Commodity Unit cost modifier: " . $modifier);	
+			addToDebugLog("updateMarketplaces(): Commodity Unit Cost: " . $commodity_unit_cost);	
 			$new_price = round($modifier * $commodity_unit_cost, 0);
-			addToDebugLog("updateMarketplaces(): Commodity Unit new price: " . $new_price);	
+			addToDebugLog("updateMarketplaces(): Commodity Unit new price: " . $new_price);
 
 			// Update commodity amount to simulate production
 			
@@ -270,9 +273,13 @@
 			} elseif ($commodity_units > 80) {
 				$new_units = 0;
 			}
-			addToDebugLog("updateMarketplaces(): Commodity amount modifier: " . $new_units);	
+			addToDebugLog("updateMarketplaces(): Commodity amount modifier: " . $new_units);
+
+			$new_units = $new_units + $commodity_units = $result[$c][2];			
+			addToDebugLog("updateMarketplaces(): New Commodity Units: " . $new_units);	
 			
-			$dml = "UPDATE startrade.marketplace SET commodity_unit_cost = " . $new_price . ", commodity_units = commodity_units + " . $new_units . " WHERE marketplace_id = " . $marketplace_id . ";";
+			$dml = "UPDATE startrade.marketplace SET commodity_unit_cost = " . $new_price . ", commodity_units = " . $new_units . " WHERE marketplace_id = " . $marketplace_id . ";";
+			addToDebugLog("updateMarketplaces(): Generated DML: " . $dml);	
 			$resultdml = insert($dml);
 			if ($resultdml == TRUE) {
 				addToDebugLog("updateMarketplaces(): Commodity value updated");
