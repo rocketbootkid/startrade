@@ -37,7 +37,7 @@
 	$best_planet_details = array(
 			array(0, "No Help at all", 0),
 			array(1, "Either System Name or Planet Name", 1000000),
-			array(2, "Both Names available", 5000000),
+			array(2, "Both Names available, planet links", 5000000),
 	);
 	
 	echo "<tr><td>Best Planet<td>In Cargohold, shows the planet with the best known price";
