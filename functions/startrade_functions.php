@@ -302,14 +302,22 @@
 				}
 				echo "\n\t\t\t<td align=center bgcolor=" . $color . ">" . $price_here . " (" . $price_delta . ")"; // Price Here
 				
-				$best_price = getBestPrice($commodity_id); // [0] is Price, [1] is Planet Name
-				// Hide part of the planet name where best price is, either system or planet
+				$best_price = getBestPrice($commodity_id); // [0] is Price, [1] is Planet Name, [2] is Planet ID
 				$best_price_planet = explode(" ", $best_price[0][1]);
-				$option = round(rand(0,1));
-				if ($option == 0) {
-					$best_price_planet_display = "??? " . $best_price_planet[1];
+				
+				// Determine how much information to show, based in player's upgrade level
+				$upgrade_details = getPlayerUpgradeLevel($player_id, "best_planet");
+				if ($upgrade_details[0][3] == 0) { // No Help
+					$best_price_planet_display = "??? ???";
+				} elseif ($upgrade_details[0][3] == 1) { // Some Help
+					$option = round(rand(0,1));
+					if ($option == 0) {
+						$best_price_planet_display = "??? " . $best_price_planet[1];
+					} else {
+						$best_price_planet_display = $best_price_planet[0] . " ???";
+					}
 				} else {
-					$best_price_planet_display = $best_price_planet[0] . " ???";
+					$best_price_planet_display = "<a href='interplanetary.php?planet_id=" . $best_price[0][2] . "&player_id=" . $_GET['player_id'] . "'>" . $best_price_planet[0] . " " .  $best_price_planet[1] . "</a>";
 				}
 
 				echo "\n\t\t\t<td align=center>" . $best_price[0][0] . " (" . $best_price_planet_display . ")"; // Best Price
@@ -475,11 +483,10 @@
 		
 		addToDebugLog("getBestPrice(): Function Entry - supplied parameters: Commodity ID: " . $commodity_id);
 
-		$sql = "SELECT commodity_unit_cost, planet_name FROM startrade.marketplace, startrade.planets WHERE marketplace.commodity_id = " . $commodity_id . " AND marketplace.planet_id = planets.planet_id ORDER BY commodity_unit_cost DESC LIMIT 1;";
+		$sql = "SELECT commodity_unit_cost, planet_name, planets.planet_id FROM startrade.marketplace, startrade.planets WHERE marketplace.commodity_id = " . $commodity_id . " AND marketplace.planet_id = planets.planet_id ORDER BY commodity_unit_cost DESC LIMIT 1;";
 		addToDebugLog("sell(): Constructed query: " . $sql);	
 		$result = search($sql);
 		addToDebugLog("getBestPrice(): Function Entry - Price: " . $result[0][0] . ", Planet: " . $result[0][1]);
-		
 		
 		return $result;
 	

@@ -19,4 +19,32 @@
 	
 	}
 
+	function buyUpgrade($player_id, $upgrade_name, $new_level, $price) {
+		
+		// This function purchases upgrades
+	
+		addToDebugLog("buyUpgrade(): Function Entry - supplied parameters: Player ID: " . $player_id . ", Upgrade ID: " . $upgrade_id . ", New Level: " . $new_level . ", Price: " . $price);		
+		
+		// Upgrade players upgrade level
+			$dml = "UPDATE startrade.upgrades SET upgrade_level = " . $new_level . " WHERE player_id = " . $player_id . " AND upgrade_name = '" . $upgrade_name . "';";
+			addToDebugLog("buyUpgrade(): DML generated: "  .$dml);
+			$result = insert($dml);
+			if ($result == TRUE) {
+				addToDebugLog("buyUpgrade(): Upgrade purchased");
+			} else {
+				addToDebugLog("buyUpgrade(): ERROR: Upgrade not purchased");
+			}
+		
+		// Remove funds from player's funds
+		$dml = "UPDATE startrade.player SET current_funds = current_funds - " . $price . " WHERE player_id = " . $player_id . ";";
+		addToDebugLog("buyUpgrade(): DML generated: "  .$dml);
+		$result = insert($dml);
+		if ($result == TRUE) {
+			addToDebugLog("buyUpgrade(): Player funds updated");
+		} else {
+			addToDebugLog("buyUpgrade(): ERROR: Player funds not updated");
+		}
+	
+	}
+
 ?>

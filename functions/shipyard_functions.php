@@ -34,8 +34,33 @@
 			echo "\n\t\t\t<td id='cargo' align=center>" . $cargo_size . "V<sub>u</sub>";
 			echo "\n\t\t\t<td id='price' align=center>" . $price . "Cr";
 			echo "\n\t\t\t<td id='buy' align=center>";
-			if ($price <= $player_money) {
+			
+			// Compare player upgrade with number of ships to determine if can buy any more
+			$player_ships = playerShips($player_id); 
+			$upgrade_details = getPlayerUpgradeLevel($player_id, "fleet_size");
+			
+			switch ($upgrade_details[0][3]) {
+				case 0:
+					$max_ships = 1;
+					break;
+				case 1:
+					$max_ships = 3;
+					break;
+				case 2:
+					$max_ships = 6;
+					break;
+				case 3:
+					$max_ships = 10;
+					break;
+				case 6:
+					$max_ships = 10000000000;
+					break;
+			}
+			
+			if ($price <= $player_money && $player_ships < $max_ships) {
 				echo "<a href='shipyard_transactions.php?player_id=" . $player_id . "&name=" . $name . "&price=" . $price . "&cargo=" . $cargo_size . "&tradein=" . $trade_in_price . "&txn=buy' target='_blank'>Buy</a>";
+			} else {
+				echo "-";
 			}
 			echo "\n\t\t</tr>";
 		}

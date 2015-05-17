@@ -141,14 +141,35 @@
 	
 	}
 
-	function displayTransactions($player_id, $count) {
+	function displayTransactions($player_id) {
 		
 		// Will determine what Transaction display mode to use
 		
-		addToDebugLog("displayTransactions(): Function Entry - supplied parameters: Player ID: " . $player_id . ", Count: " . $count);
+		addToDebugLog("displayTransactions(): Function Entry - supplied parameters: Player ID: " . $player_id);
 		
-		//displayTransactionsBasic($player_id, $count);
-		displayTransactionsAdvanced($player_id, $count);
+		// Determine player's upgrade mode to determine what to display
+		$upgrade_details = getPlayerUpgradeLevel($player_id, "txn_history");
+	
+		addToDebugLog("displayTransactions(): Upgrade Level: " . $upgrade_details[0][3]);
+		switch ($upgrade_details[0][3]) {
+			case 1:
+				addToDebugLog("displayTransactions(): Upgrade Level 1");
+				displayTransactionsBasic($player_id, 5);
+				break;
+			case 2:
+				addToDebugLog("displayTransactions(): Upgrade Level 2");
+				displayTransactionsBasic($player_id, 10);
+				break;
+			case 3:
+				addToDebugLog("displayTransactions(): Upgrade Level 3");
+				displayTransactionsAdvanced($player_id, 5);
+				break;
+			case 4:
+				addToDebugLog("displayTransactions(): Upgrade Level 4");
+				displayTransactionsAdvanced($player_id, 10);
+				break;
+		}
+
 	}
 	
 	
