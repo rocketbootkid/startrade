@@ -12,6 +12,7 @@
 	include 'functions/startrade_functions.php';
 	include 'functions/mysql_functions.php';
 	include 'functions/shipyard_functions.php';
+	include 'functions/upgrade_functions.php';
 	
 	// Get player's current planet
 	$current_planet_details = currentPlanetDetails($_GET['player_id']);

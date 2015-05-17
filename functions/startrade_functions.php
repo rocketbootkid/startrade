@@ -233,215 +233,13 @@
 
 	}
 	
-	function marketPlace($planet_id) {
-	
-		// Generates the marketplace
-	
-		global $current_player;
-	
-		addToDebugLog("marketPlace(): Function Entry - supplied parameters: Planet ID: " . $planet_id);
-	
-		// Determine if this is the first visit to this planet
-		// If so, get back the previous commodity details and vary slightly
-		// If not, generate new commodity values
-		
-		$havewevisited = haveWeVisitedThisPlanet($planet_id);
-		addToDebugLog("marketPlace(): Have we visited this planet: " . $havewevisited);
-	
-		if ($havewevisited == FALSE) {
-			generateNewMarketplace($planet_id);
-			addToDebugLog("marketPlace(): Generate a new marketplace");
-			displayMarketplace($planet_id);
-		} else {
-			displayMarketplace($planet_id);
-			addToDebugLog("marketPlace(): Rebuild the marketplace");
-		}
-		
-	}
-	
-	function generateNewMarketplace($planet_id) {
-	
-		// Generate list of commodities to buy for the supplied planet
-		
-		addToDebugLog("generateNewMarketplace(): Function Entry - supplied parameters: Planet: " . $planet_id);
-		
-		global $current_player;		
-		
-		$sql = "SELECT * FROM startrade.commodity;";
-		$result = search($sql);
-		$rows = count($result);
-		
-		for ($c = 0; $c < $rows; $c++) {
-
-			// Determine number of available units
-			$select = rand(1, 4);
-			if ($select <= 3) { // Determine if commodity is available
-				$available_units = round(rand(10, 100), 0); // Generate available amount
-				addToDebugLog("generateNewMarketplace(): " . $available_units . " units of " . $result[$c][1] . " available");
-			} else {
-				$available_units = 0;
-				addToDebugLog("generateNewMarketplace(): Commodity not available: " . $result[$c][1]);
-			}
-			
-			// If commodity is fuel, ensure there is some available
-			if ($result[$c][0] == 16) { // Fuel
-				$available_units = 100;
-				addToDebugLog("generateNewMarketplace(): Ensured 100 units of fuel available");
-			}
-			
-			
-			// Generate Price
-			$amount = round(rand(intval($result[$c][2]), $result[$c][3]), 0);
-			if ($amount < $result[$c][2]) { // set price to minimum if random makes it zero
-				$amount = $result[$c][2];
-			}
-			
-			// Determine what type of planet we're on
-			$planet_type = currentPlanetDetails($current_player);
-			
-			// If the planet type matches the commodity type, buff the commodity value by 10%
-			$best_planet_type = $result[$c][3];
-			if ($planet_type == $best_planet_type) {
-				$amount = round($amount*1.1, 0);
-			}	
-			addToDebugLog("generateNewMarketplace(): " . $result[$c][1] . " price set at " . $amount);
-					
-			// Write current commodity values to the database
-			$dml = "INSERT INTO startrade.marketplace (planet_id, commodity_id, commodity_unit_cost, commodity_units) VALUES (" . $planet_id . ", " . $result[$c][0] . ", " . $amount . ", " . $available_units . ");";
-			$result_m = insert($dml);
-			if ($result_m == TRUE) {
-				addToDebugLog("generateNewMarketplace(): New commodity stored");
-			} else {
-				echo "ERROR!";
-			}
-			
-		}
-		
-		echo "</table>";
-	
-	}
-	
-	function displayMarketplace($planet_id) {
-	
-		// Displays the contents of the planets marketplace
-	
-		addToDebugLog("displayMarketplace(): Function Entry - supplied parameters: Planet ID: " . $planet_id);		
-
-		global $current_player;	
-		
-		$sql = "SELECT * FROM startrade.marketplace WHERE planet_id = " . $planet_id . ";";
-		addToDebugLog("displayMarketplace(): Generated SQL: " . $sql);		
-		
-		// 0	marketplace_id
-		// 1	planet_id
-		// 2	commodity_id
-		// 3	commodity_unit_cost
-		// 4	commodity_units
-		
-		$result = search($sql);
-		$rows = count($result);
-		
-		echo "\n\t<table border=1 cellspacing=0 cellpadding=3>";
-		echo "\n\t\t<tr bgcolor=#82caff>";
-		echo "\n\t\t\t<td>Commodities to Buy";
-		echo "\n\t\t\t<td align=center>Cr";
-		echo "\n\t\t\t<td align=center>U";
-		echo "\n\t\t\t<td align=center>V<sub>U</sub>";
-		echo "\n\t\t\t<td align=center colspan=4>Buy Max";
-		echo "\n\t\t</tr>";
-		
-		for ($c = 0; $c < $rows; $c++) {
-
-			if ($result[$c][4] == 0) {
-				echo "<tr bgcolor=#ddd>";
-			} else {
-				echo "<tr>";
-			}
-			$commodity_name = getCommodityDetail($result[$c][2], 'commodity_name');
-			$best_planet_type = getCommodityDetail($result[$c][2], 'best_planet_type');
-			echo "\n\t\t\t<td>" . $commodity_name . " (" . substr($best_planet_type, 0, 1) . ")"; // Description
-		
-			// Highlight if price is good or bad
-			$commodity_min =  getCommodityDetail($result[$c][2], 'min_price');
-			$commodity_max =  getCommodityDetail($result[$c][2], 'max_price');
-			$amount = $result[$c][3]; // Amount is current marketplace price
-			$price_delta = $commodity_max - $commodity_min;
-			if ($amount < ($commodity_min + (0.2*$price_delta))) { // Good for buying
-				echo "\n\t\t\t<td align=center bgcolor=#81F781>";  // green
-				addToDebugLog("generateNewMarketplace(): " . $amount . " is a good price for buying!");
-			} elseif ($amount > ($commodity_max - (0.2*$price_delta))) { // Good for selling
-				echo "\n\t\t\t<td align=center bgcolor=#FE642E>";
-				addToDebugLog("generateNewMarketplace(): " . $amount . " is a bad price for buying!");
-			} else {
-				echo "\n\t\t\t<td align=center>";
-			}
-			echo $result[$c][3]; // Price
-			
-			echo "\n\t\t\t<td align=center>" . $result[$c][4]; // Units
-			$available_units = $result[$c][4];
-			
-			$commodity_unit_volume = getCommodityDetail($result[$c][2], 'size'); // Get commodity
-			echo "\n\t\t\t<td align=center>" . $commodity_unit_volume; // Unit Vol.
-			
-			// Determine max units, based on cargo space and available funds
-			$current_funds = playerCurrentCredits($current_player);
-			addToDebugLog("generateNewMarketplace(): Current funds: " . $current_funds);
-			$remaining_cargo_space = remainingCargoSpace($current_player);
-			addToDebugLog("generateNewMarketplace(): Remaining cargo space: " . $remaining_cargo_space);
-			
-			$units = 0;
-			$cargo = 0;
-			$cost = 0;
-			while ($cost <= $current_funds && $cargo <= $remaining_cargo_space && $units <= $available_units) {
-
-				$units++;
-				$cost = $units*$amount;
-				$cargo = $units*$commodity_unit_volume;
-
-				addToDebugLog("generateNewMarketplace(): Commodity Checks for: " . $result[$c][1]);
-				addToDebugLog("generateNewMarketplace(): Funds: Cost: " . $cost . ", Current funds: " . $current_funds);
-				addToDebugLog("generateNewMarketplace(): Cargo: Cargo: " . $cargo . ", Available cargo space: " . $remaining_cargo_space);
-				addToDebugLog("generateNewMarketplace(): Units: Units: " . $units . ", Available units: " . $available_units);
-
-			}
-			
-			if ($units > 0) {
-				$units = $units-1;
-				$cost = $units*$amount;
-				$cargo = $units*$commodity_unit_volume;
-			}
-			
-			if ($available_units > 0 && $cost < $current_funds && $cargo <= $remaining_cargo_space && $units > 0) {
-				addToDebugLog("generateNewMarketplace(): Can buy because;");
-				addToDebugLog("generateNewMarketplace(): Funds: Cost: " . $cost . ", Current funds: " . $current_funds);
-				addToDebugLog("generateNewMarketplace(): Cargo: Cargo: " . $cargo . ", Available cargo space: " . $remaining_cargo_space);
-				addToDebugLog("generateNewMarketplace(): Units: Units: " . $units . ", Available units: " . $available_units);				
-				echo "\n\t\t\t<td align=left><a href='transaction.php?planet_id=" . $planet_id . "&player_id=" . $current_player . "&txn=buy&marketplace_id=" . $result[$c][0] . "&units=" . $units . "&unit_cost=" . $amount . "&commodity_id=" . $result[$c][2] . "' target='_blank'>Max</a>"; // Max
-
-				echo "\n\t\t\t<td align=center>" . $units . "u<td align=center>" . $cost . "Cr<td align=center>" . $cargo . "V<sub>u</sub>";
-			} else {
-				echo "\n\t\t\t<td colspan=4 align=center>-";
-				addToDebugLog("generateNewMarketplace(): Can't buy for one of the following reasons;");
-				addToDebugLog("generateNewMarketplace(): Funds: Cost: " . $cost . ", Current funds: " . $current_funds);
-				addToDebugLog("generateNewMarketplace(): Cargo: Cargo: " . $cargo . ", Available cargo space: " . $remaining_cargo_space);
-				addToDebugLog("generateNewMarketplace(): Units: Units: " . $units . ", Available units: " . $available_units);
-			}
-			
-			echo "\n\t\t</tr>";
-			
-		}
-		
-		echo "\n\t</table>";	
-	
-	}
-	
 	function cargo($player_id) {
 	
 		// Lists the commodities, fuel and money that a player has
 	
 		addToDebugLog("cargo(): Function Entry - supplied parameters: Player ID: " . $player_id);	
 	
-		echo "\n\t<table border=1 cellspacing=0 cellpadding=3>";
+		echo "\n\t<table border=1 cellspacing=0 cellpadding=3 width=100%>";
 		echo "\n\t\t<tr bgcolor=#82caff>";
 		echo "\n\t\t\t<td>Commodities to Sell";
 		echo "\n\t\t\t<td align=center>Units";
@@ -497,16 +295,29 @@
 				// Identify price of commodity at this planet
 				$price_here = getMarketplaceDetail($_GET['planet_id'], $commodity_id, "commodity_unit_cost");
 				$price_delta = $price_here - $result[$c][3];
-				echo "\n\t\t\t<td align=center>" . $price_here . " (" . $price_delta . ")"; // Price Here
-				
-				$best_price = getBestPrice($commodity_id); // [0] is Price, [1] is Planet Name
-				// Hide part of the planet name where best price is, either system or planet
-				$best_price_planet = explode(" ", $best_price[0][1]);
-				$option = round(rand(0,1));
-				if ($option == 0) {
-					$best_price_planet_display = "??? " . $best_price_planet[1];
+				if ($price_delta > 0) {
+					$color = "#81F781";
 				} else {
-					$best_price_planet_display = $best_price_planet[0] . " ???";
+					$color = "FE642E";
+				}
+				echo "\n\t\t\t<td align=center bgcolor=" . $color . ">" . $price_here . " (" . $price_delta . ")"; // Price Here
+				
+				$best_price = getBestPrice($commodity_id); // [0] is Price, [1] is Planet Name, [2] is Planet ID
+				$best_price_planet = explode(" ", $best_price[0][1]);
+				
+				// Determine how much information to show, based in player's upgrade level
+				$upgrade_details = getPlayerUpgradeLevel($player_id, "best_planet");
+				if ($upgrade_details[0][3] == 0) { // No Help
+					$best_price_planet_display = "??? ???";
+				} elseif ($upgrade_details[0][3] == 1) { // Some Help
+					$option = round(rand(0,1));
+					if ($option == 0) {
+						$best_price_planet_display = "??? " . $best_price_planet[1];
+					} else {
+						$best_price_planet_display = $best_price_planet[0] . " ???";
+					}
+				} else {
+					$best_price_planet_display = "<a href='interplanetary.php?planet_id=" . $best_price[0][2] . "&player_id=" . $_GET['player_id'] . "'>" . $best_price_planet[0] . " " .  $best_price_planet[1] . "</a>";
 				}
 
 				echo "\n\t\t\t<td align=center>" . $best_price[0][0] . " (" . $best_price_planet_display . ")"; // Best Price
@@ -519,10 +330,6 @@
 			$remaining_cargo_space = $cargo;
 			echo "\n\t\t<tr>\n\t\t\t<td colspan=7>No cargo\n\t\t</tr>";
 		}
-
-		// Display Ship Name
-		//$ship_name = getCurrentShipName($player_id);
-		//echo "\n\t\t<tr bgcolor=#82caff>\n\t\t\t<td colspan=6>" . $ship_name . "\n\t\t</tr>";
 		
 		// Player Fuel
 
@@ -628,30 +435,6 @@
 	
 	}
 	
-	function getMarketplaceDetail($planet_id, $commodity_id, $attribute) {
-	
-		// Gets details about the chosen commodity on selected planet
-
-		addToDebugLog("getMarketplaceDetail(): Function Entry - supplied parameters: Commodity ID: " . $commodity_id . ", Commodity attribute: " . $attribute);	
-	
-		// [0] marketplace_id
-		// [1] planet_id
-		// [2] commodity_id
-		// [3] commodity_unit_cost
-		// [4] commodity_units
- 	
-		$sql = "SELECT " . $attribute . " FROM startrade.marketplace WHERE commodity_id = '" . $commodity_id . "' AND planet_id = '" . $planet_id . "';";
-		addToDebugLog("getMarketplaceDetail(): Constructed query: " . $sql);
-		
-		$result = search($sql);
-		$marketplace_detail = $result[0][0];
-		
-		addToDebugLog("getMarketplaceDetail(): Commodity " . $commodity_id . "'s " . $attribute . " on planet " . $planet_id . ": " . $marketplace_detail);
-		
-		return $marketplace_detail;
-	
-	}
-	
 	function getCommodityID($commodity_name) {
 	
 		// Returns commodity id for supplied commodity
@@ -694,252 +477,37 @@
 	
 	}
 	
-	function purchase($current_player, $planet_id, $marketplace_id, $units, $unit_cost, $commodity_id) {
-	
-		// Completes purchase transaction
-		
-		addToDebugLog("purchase(): Function Entry - supplied parameters: Player ID: " . $player_id . ", Planet ID: " . $planet_id . ", Marketplace ID: " . $marketplace_id . ", Units: " . $units . ", Unit cost: " . $unit_cost . ", Commodity ID: " . $commodity_id);	
-
-		// Removes amount from planet inventory
-		$dml = "UPDATE startrade.marketplace SET commodity_units = commodity_units - " . $units . " WHERE marketplace_id = " . $marketplace_id . ";";
-		$result = insert($dml);
-		if ($result == TRUE) {
-			addToDebugLog("purchase(): Commodity units updated");
-		} else {
-			addToDebugLog("purchase(): Commodity units not updated");
-		}		
-		
-		// Adds amount to player inventory
-		
-		// If the commodity is fuel, add it to ship, not to cargohold
-		if ($commodity_id == 16) { // It's fuel
-		
-			// Update fuel
-			addToDebugLog("purchase(): Updating fuel");
-			
-			$dml = "UPDATE startrade.player SET remaining_fuel = remaining_fuel + " . $units . " WHERE player_id = " . $current_player . ";";
-			$result = insert($dml);
-			if ($result == TRUE) {
-				addToDebugLog("purchase(): Ship fuel updated");
-			} else {
-				addToDebugLog("purchase(): Ship fuel not updated");
-			}		
-			
-		} else { // It's not fuel
-	
-			// Determine if player already has inventory of that type
-			$sql = "SELECT amount FROM startrade.cargohold WHERE player_id = " . $current_player . " AND commodity_id = " . $commodity_id . ";";
-			$result = search($sql);
-			$amount = $result[0][0];
-
-			if ($amount > 0) {
-				// If so, update it
-				addToDebugLog("purchase(): Existing cargo found; updating count");
-				
-				$dml = "UPDATE startrade.cargohold SET amount = amount + " . $units . " WHERE player_id = " . $current_player . " AND commodity_id = " . $commodity_id . ";";
-				$result = insert($dml);
-				if ($result == TRUE) {
-					addToDebugLog("purchase(): Existing cargohold units updated");
-				} else {
-					addToDebugLog("purchase(): Existing cargohold units not updated");
-				}	
-			
-			} else {
-				// If not, add new
-				addToDebugLog("purchase(): Adding new cargo type");
-
-				$dml = "INSERT INTO startrade.cargohold (player_id, commodity_id, amount, bought_for) VALUES (" . $current_player . ", " . $commodity_id . ", " . $units . ", " . $unit_cost . ");";
-				$result = insert($dml);
-				if ($result == TRUE) {
-					addToDebugLog("purchase(): Existing cargohold units updated");
-				} else {
-					addToDebugLog("purchase(): Existing cargohold units not updated");
-				}	
-				
-			}	
-
-		}			
-		
-		// Reduce remaining credits
-		$cost = $unit_cost * $units;
-		$dml = "UPDATE startrade.player SET current_funds = current_funds - " . $cost . " WHERE player_id = " . $current_player . ";";
-		$result = insert($dml);
-		if ($result == TRUE) {
-			addToDebugLog("purchase(): Player funds updated");
-		} else {
-			addToDebugLog("purchase(): Player funds not updated");
-		}
-	
-	}
-	
-	function sell($planet_id, $player_id, $units, $commodity_id) {
-
-		// Completes sell transaction
-		
-		addToDebugLog("sell(): Function Entry - supplied parameters: Player ID: " . $player_id . ", Planet ID: " . $planet_id . ", Units: " . $units . ", Commodity ID: " . $commodity_id);
-		
-		// Remove cargo from hold
-		$dml = "DELETE FROM startrade.cargohold WHERE player_id = " . $player_id . " AND commodity_id = " . $commodity_id . ";";
-		addToDebugLog("sell(): Constructed query: " . $dml);
-		$result = insert($dml);
-		if ($result == TRUE) {
-			addToDebugLog("sell(): Existing cargohold units updated");
-		} else {
-			addToDebugLog("sell(): Existing cargohold units not updated");
-		}		
-		
-		// Add cargo to marketplace
-		$dml = "UPDATE startrade.marketplace SET commodity_units = commodity_units + " . $units . " WHERE planet_id = " . $planet_id . " AND commodity_id = " . $commodity_id . ";";
-		addToDebugLog("sell(): Constructed query: " . $dml);
-		$result = insert($dml);
-		if ($result == TRUE) {
-			addToDebugLog("sell(): Commodity units updated");
-		} else {
-			addToDebugLog("sell(): Commodity units not updated");
-		}
-		
-		// Get marketplace value
-		$sql = "SELECT commodity_unit_cost FROM startrade.marketplace WHERE planet_id = " . $planet_id . " AND commodity_id = " . $commodity_id . ";";
-		addToDebugLog("sell(): Constructed query: " . $sql);	
-		$result = search($sql);
-		$value = $result[0][0];
-		$credits = $value*$units;
-		
-		// Update player credits
-		$dml = "UPDATE startrade.player SET current_funds = current_funds + " . $credits . " WHERE player_id = " . $player_id . ";";
-		addToDebugLog("sell(): Constructed query: " . $dml);
-		$result = insert($dml);
-		if ($result == TRUE) {
-			addToDebugLog("sell(): Player credits updated");
-		} else {
-			addToDebugLog("sell(): Player credits not updated");
-		}
-	
-	}
-	
 	function getBestPrice($commodity_id) {
 
 		// Finds best price for supplied commodity on visited planets
 		
 		addToDebugLog("getBestPrice(): Function Entry - supplied parameters: Commodity ID: " . $commodity_id);
 
-		$sql = "SELECT commodity_unit_cost, planet_name FROM startrade.marketplace, startrade.planets WHERE marketplace.commodity_id = " . $commodity_id . " AND marketplace.planet_id = planets.planet_id ORDER BY commodity_unit_cost DESC LIMIT 1;";
+		$sql = "SELECT commodity_unit_cost, planet_name, planets.planet_id FROM startrade.marketplace, startrade.planets WHERE marketplace.commodity_id = " . $commodity_id . " AND marketplace.planet_id = planets.planet_id ORDER BY commodity_unit_cost DESC LIMIT 1;";
 		addToDebugLog("sell(): Constructed query: " . $sql);	
 		$result = search($sql);
 		addToDebugLog("getBestPrice(): Function Entry - Price: " . $result[0][0] . ", Planet: " . $result[0][1]);
-		
 		
 		return $result;
 	
 	}
 	
-	function updateMarketplaces() {
-
-		// Updates the price and amount for all commodities in all marketplaces
+	function getPlanetDetails($planet_id, $attribute) {
 		
-		addToDebugLog("updateMarketplaces(): Function Entry");	
+		// Returns details of the specified planet
 		
-		$sql = "SELECT marketplace_id, commodity_unit_cost, commodity_units FROM startrade.marketplace;";
-		addToDebugLog("updateMarketplaces(): Constructed query: " . $sql);	
+		addToDebugLog("getPlanetDetails(): Function Entry - supplied parameters: Planet ID: " . $planet_id . ", Attribute: " . $attribute);	
+		
+		$sql = "SELECT " . $attribute . " FROM startrade.planets WHERE planet_id = '" . $planet_id . "';";
+		addToDebugLog("getPlanetDetails(): Constructed query: " . $sql);
+		
 		$result = search($sql);
-		$rows = count($result);
+		$planet_detail = $result[0][0];
 		
-		for ($c = 0; $c < $rows; $c++) {
+		addToDebugLog("getCommodityDetail(): Planet " . $planet_id . "'s " . $attribute . ": " . $planet_detail);
 		
-			$marketplace_id = $result[$c][0];	
-			$commodity_unit_cost = $result[$c][1];	
-			$commodity_units = $result[$c][2];	
-
-			// Update commodity cost to simulate market fluctuations
-			
-			$modifier = rand(95, 105)/100;
-			addToDebugLog("updateMarketplaces(): Commodity Unit cost modifier: " . $modifier);	
-			$new_price = round($modifier * $commodity_unit_cost, 0);
-			addToDebugLog("updateMarketplaces(): Commodity Unit new price: " . $new_price);	
-
-			// Update commodity amount to simulate production
-			
-			if ($commodity_units == 0) {
-				$new_units = rand(0, 50);
-			} elseif ($commodity_units >= 20 && $commodity_units < 40) {
-				$new_units = rand(0, 20);
-			} elseif ($commodity_units >= 40 && $commodity_units < 60 ) {
-				$new_units = rand(0, 10);
-			} elseif ($commodity_units > 80) {
-				$new_units = 0;
-			}
-			addToDebugLog("updateMarketplaces(): Commodity amount modifier: " . $new_units);	
-			
-			$dml = "UPDATE startrade.marketplace SET commodity_unit_cost = " . $new_price . ", commodity_units = commodity_units + " . $new_units . " WHERE marketplace_id = " . $marketplace_id . ";";
-			$resultdml = insert($dml);
-			if ($resultdml == TRUE) {
-				addToDebugLog("updateMarketplaces(): Commodity value updated");
-			} else {
-				addToDebugLog("updateMarketplaces(): Commodity value not updated");
-			}
-			
-		}
-	
-	}
-	
-	function updateMarketplaceFuel() {
-	
-		// Updates the price for all commodities in all marketplaces
+		return $planet_detail;
 		
-		addToDebugLog("updateMarketplaceFuel(): Function Entry");		
-	
-		// Only Industrial planets have fuel
-		
-		$sql = "SELECT planet_id FROM startrade.planets WHERE planet_type = 'Industrial';";
-		addToDebugLog("updateMarketplaceFuel(): Constructed query: " . $sql);	
-		$result = search($sql);
-		$rows = count($result);
-		addToDebugLog("updateMarketplaceFuel(): Industrial planets found: " . $rows);	
-		
-		for ($c = 0; $c < $rows; $c++) {		
-			// Get existing amount of fuel on the planet
-			$sql_existing = "SELECT commodity_units FROM startrade.marketplace WHERE planet_id = " . $result[$c][0] . " AND commodity_id = 16;";
-			addToDebugLog("updateMarketplaceFuel(): Generated SQL: " . $sql);
-			
-			$result_existing = search($sql_existing);
-			$rows_existing = count($result_existing);			
-			//echo "<p>Planet ID: " . $result[$c][0] . ", Existing rows: " . $rows_existing . ", Fuel: " . $rows_existing[0][0];
-			
-			if ($rows_existing == 0) {
-				//echo "Insert a new row";
-				addToDebugLog("updateMarketplaceFuel(): Fuel commodity not found");	
-				// If there is no fuel entry for the planet, add some
-				$commodity_unit_cost = rand(500, 1000);
-				$commodity_units = rand(50, 100);
-				$dml_existing = "INSERT INTO startrade.marketplace (planet_id, commodity_id, commodity_unit_cost, commodity_units) VALUES (" . $result[$c][0] . ", 16, " . $commodity_unit_cost . ", " . $commodity_units . ");";
-				$result_existing = insert($dml_existing);
-				if ($result_existing == TRUE) {
-					addToDebugLog("updateMarketplaceFuel(): Fuel data added");
-				} else {
-					addToDebugLog("updateMarketplaceFuel(): Fuel data not added");
-				}
-			
-			} elseif ($rows_existing == 1) {
-				//echo "Update existing row";
-				addToDebugLog("updateMarketplaceFuel(): Fuel commodity found, currently " . $result_existing[0][0] . " units");	
-				// Add 10, or round up to 100
-				if ($result_existing[0][0] >= 95) {
-					$dml_update = "UPDATE startrade.marketplace SET commodity_units = 100 WHERE planet_id = " . $result[$c][0] . " AND commodity_id = 16;";
-					addToDebugLog("updateMarketplaceFuel(): Fuel commodity found, updating to 100 units");
-				} else {
-					$dml_update = "UPDATE startrade.marketplace SET commodity_units = commodity_units + 5 WHERE planet_id = " . $result[$c][0] . " AND commodity_id = 16;";
-					addToDebugLog("updateMarketplaceFuel(): Fuel commodity found, increasing by 5 units");
-				}
-				$result_update = insert($dml_update);
-				if ($result_update == TRUE) {
-					addToDebugLog("updateMarketplaceFuel(): Fuel data updated");
-				} else {
-					addToDebugLog("updateMarketplaceFuel(): Fuel data not updated");
-				}			
-			} else {
-				//echo "Do nothing; too many rows!";
-			}
-		}
 	}
 
 ?>

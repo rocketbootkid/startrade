@@ -1,0 +1,16 @@
+Upgrades
+--------
+1. System to let you buy upgrades to various aspects of the system
+  a. Unlock the ability to view the entirety of the planet with the best price
+  b. Unlock the ability to view (more of) the transaction history
+  c. Unlock the ability to move between galaxies
+  d. Unlock the ability to have more than X ships in fleet
+2. Separate page with a technology tree
+  a. certain techs only accessible from certain planets
+  b. access randomly available.
+  c. Price static
+  
+Multiverse
+----------
+1. Generate other galaxies that players can travel to.
+2. Ability unlocked by buying upgrade
